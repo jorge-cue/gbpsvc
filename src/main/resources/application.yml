@@ -1,0 +1,4 @@
+
+store:
+  url: http://localhost:8085/v1/getPrice
+
