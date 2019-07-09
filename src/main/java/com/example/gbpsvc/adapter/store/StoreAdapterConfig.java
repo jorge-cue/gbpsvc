@@ -11,5 +11,5 @@ import org.springframework.stereotype.Component;
 @Data
 public class StoreAdapterConfig {
 
-    private String url;
+    private String entryPoint;
 }

@@ -1,4 +1,4 @@
 
 store:
-  url: http://localhost:8085/v1/getPrice
+  entryPoint: http://stores-svc.example.com/v1/getPrice
 

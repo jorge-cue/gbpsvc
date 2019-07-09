@@ -1,30 +1,39 @@
 package com.example.gbpsvc.adapter.store;
 
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
-@Service("storeAdapter")
+@Component("storeAdapter")
 public class StoreAdapterImpl implements StoreAdapter {
+
+    private final RestTemplateBuilder restTemplateBuilder;
 
     private final RestTemplate restTemplate;
 
     private final StoreAdapterConfig config;
 
-    public StoreAdapterImpl(RestTemplate restTemplate, StoreAdapterConfig config) {
-        this.restTemplate = restTemplate;
+    private final Executor executor;
+
+    public StoreAdapterImpl(RestTemplateBuilder restTemplateBuilder, StoreAdapterConfig config, Executor executor) {
+        this.restTemplateBuilder = restTemplateBuilder;
+        this.restTemplate = restTemplateBuilder.build();
         this.config = config;
+        this.executor = executor;
     }
 
     public SkuPrice getPriceByStoreIdAndSku(String storeId, String sku) {
         final URI url;
         try {
             url = new URI(new StringBuilder()
-                    .append(config.getUrl())
+                    .append(config.getEntryPoint())
                     .append("/store/")
                     .append(storeId)
                     .append("/sku/")
@@ -37,7 +46,7 @@ public class StoreAdapterImpl implements StoreAdapter {
         HttpHeaders headers = new HttpHeaders();
         headers.put(HttpHeaders.ACCEPT, Collections.singletonList(MediaType.APPLICATION_JSON_VALUE));
 
-        RequestEntity requestEntity = new RequestEntity(headers, HttpMethod.GET, url);
+        final RequestEntity requestEntity = new RequestEntity(headers, HttpMethod.GET, url);
 
         ResponseEntity<SkuPrice> response = restTemplate.exchange(requestEntity, SkuPrice.class);
 
@@ -48,5 +57,10 @@ public class StoreAdapterImpl implements StoreAdapter {
                 storeId, sku, response.getStatusCodeValue(), response.getStatusCode().getReasonPhrase());
 
         throw new StoreAdapterException(message);
+    }
+
+    @Override
+    public CompletableFuture<SkuPrice> getAsyncPriceByStoreIdAndSku(String storeId, String sku) {
+        return CompletableFuture.supplyAsync( () -> getPriceByStoreIdAndSku(storeId, sku), executor);
     }
 }
