@@ -67,7 +67,6 @@ public class GetBestPriceTest {
 
     @BeforeClass
     public static void startUp() {
-        wireMockRule.resetAll();
         wireMockRule.stubFor(any(anyUrl())
                 .willReturn(notFound()
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -75,7 +74,7 @@ public class GetBestPriceTest {
         wireMockRule.stubFor(get(urlPathMatching("/v1/store/\\d+/sku/\\d+/price"))
                 .withHeader(HttpHeaders.ACCEPT, new RegexPattern(MediaType.APPLICATION_JSON_VALUE))
                 .willReturn(ok()
-                        .withFixedDelay(1_000)
+                        .withFixedDelay(250)
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                         .withBody("{\"price\":{{generate-price}}, \"storeId\":\"{{request.path.[2]}}\", \"sku\":\"{{request.path.[4]}}\"}")));
     }
@@ -85,7 +84,7 @@ public class GetBestPriceTest {
         storeAdapterConfig.setEntryPoint("http://localhost:8085");
     }
 
-    @Test(timeout = 30_000L)
+    @Test(timeout = 6_000L)
     public void getBestPrice() {
         List<String> stores = IntStream.rangeClosed(1, 100).mapToObj(i -> String.format("%04d", i)).collect(Collectors.toList());
 
