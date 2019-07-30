@@ -1,4 +1,3 @@
 
 store:
-  entryPoint: http://stores-svc.example.com/v1/getPrice
-
+  entryPoint: http://localhost:8085

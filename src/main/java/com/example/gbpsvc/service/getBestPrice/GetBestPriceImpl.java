@@ -2,17 +2,17 @@ package com.example.gbpsvc.service.getBestPrice;
 
 import com.example.gbpsvc.adapter.store.SkuPrice;
 import com.example.gbpsvc.adapter.store.StoreAdapter;
+import lombok.extern.java.Log;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+@Log
 @Service("getBestPrice")
 public class GetBestPriceImpl implements GetBestPrice {
 
@@ -27,14 +27,7 @@ public class GetBestPriceImpl implements GetBestPrice {
                 .map(storeId -> storeAdapter.getAsyncPriceByStoreIdAndSku(storeId, sku))
                 .collect(Collectors.toList());
         return futures.stream()
-                .map(f -> {
-                    try {
-                        return f.get(30, TimeUnit.SECONDS);
-                    } catch(Exception x) {
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
+                .map(CompletableFuture::join)
                 .min(Comparator.comparing(SkuPrice::getPrice));
     }
 }
