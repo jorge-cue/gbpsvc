@@ -2,7 +2,6 @@ package com.example.gbpsvc.service.getBestPrice;
 
 import com.example.gbpsvc.adapter.store.SkuPrice;
 import com.example.gbpsvc.adapter.store.StoreAdapter;
-import lombok.extern.java.Log;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -12,7 +11,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-@Log
 @Service("getBestPrice")
 public class GetBestPriceImpl implements GetBestPrice {
 

@@ -1,6 +1,7 @@
 package com.example.gbpsvc.adapter.store;
 
 import lombok.extern.java.Log;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
@@ -26,6 +27,7 @@ public class StoreAdapterImpl implements StoreAdapter {
 
     private final Executor executor;
 
+    @Autowired
     public StoreAdapterImpl(
             RestTemplate restTemplate,
             StoreAdapterConfig config,
@@ -63,6 +65,6 @@ public class StoreAdapterImpl implements StoreAdapter {
 
     @Override
     public CompletableFuture<SkuPrice> getAsyncPriceByStoreIdAndSku(String storeId, String sku) {
-        return CompletableFuture.supplyAsync( () -> getPriceByStoreIdAndSku(storeId, sku), executor );
+        return CompletableFuture.supplyAsync(() -> getPriceByStoreIdAndSku(storeId, sku), executor);
     }
 }

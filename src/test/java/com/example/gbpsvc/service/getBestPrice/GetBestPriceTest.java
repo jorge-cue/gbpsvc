@@ -85,9 +85,9 @@ public class GetBestPriceTest {
         storeAdapterConfig.setEntryPoint("http://localhost:8085");
     }
 
-    @Test
+    @Test(timeout = 30_000L)
     public void getBestPrice() {
-        List<String> stores = IntStream.rangeClosed(1, 10).mapToObj(i -> String.format("%04d", i)).collect(Collectors.toList());
+        List<String> stores = IntStream.rangeClosed(1, 100).mapToObj(i -> String.format("%04d", i)).collect(Collectors.toList());
 
         Optional<SkuPrice> response = getBestPrice.getBestPrice("750123456789", stores);
 
