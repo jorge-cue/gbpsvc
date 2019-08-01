@@ -1,0 +1,9 @@
+
+logging:
+  level:
+    ROOT: warn
+    org: warn
+    com.example.gbpsvc: info
+  file: app.log
+store:
+  entry-point: http://localhost:8085

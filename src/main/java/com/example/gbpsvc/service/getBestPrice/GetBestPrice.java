@@ -7,5 +7,4 @@ import java.util.Optional;
 public interface GetBestPrice {
 
     Optional<SkuPrice> getBestPrice(final String sku, final Iterable<String> stores);
-
 }
