@@ -1,29 +1,22 @@
 package com.example.gbpsvc.service.getBestPrice;
 
 import com.example.gbpsvc.adapter.store.SkuPrice;
-import com.example.gbpsvc.adapter.store.StoreAdapterConfig;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
-import com.github.tomakehurst.wiremock.http.DelayDistribution;
 import com.github.tomakehurst.wiremock.http.UniformDistribution;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.github.tomakehurst.wiremock.matching.RegexPattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHeaders;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.client.RestTemplate;
 
-import java.math.BigDecimal;
-import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -41,7 +34,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
-public class GetBestPriceTest {
+public class GetBestPriceImplTest {
 
     private static final Random RANDOM = new Random();
 
@@ -64,7 +57,6 @@ public class GetBestPriceTest {
                 .withHeader(HttpHeaders.ACCEPT, new RegexPattern(MediaType.APPLICATION_JSON_VALUE))
                 .willReturn(ok()
                         .withRandomDelay(new UniformDistribution(250, 1000))
-//                        .withFixedDelay(250)
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                         .withBody("{\"price\":{{generate-price}}, \"storeId\":\"{{request.path.[2]}}\", \"sku\":\"{{request.path.[4]}}\"}")));
     }
@@ -80,6 +72,6 @@ public class GetBestPriceTest {
         log.info("Minimum SkuPrice: " + skuPrice.toString());
         assertThat(skuPrice.getStoreId()).isNotEmpty();
         assertThat(skuPrice.getSku()).isEqualTo("750123456789");
-        assertThat(skuPrice.getPrice()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
+        assertThat(skuPrice.getPrice()).isNotNull();
     }
 }

@@ -69,7 +69,8 @@ public class StoreAdapterImpl implements StoreAdapter {
     }
 
     /*
-     * This starts an asynchronous REST call to a store to get store/sku price.
+     * The synchronous call above is launched in another thread so this threar may continue non blocked.
+     * CompletableFuture can be used to retrieve the response.
      */
     public CompletableFuture<SkuPrice> getAsyncPriceByStoreIdAndSku(String storeId, String sku) {
         return CompletableFuture.supplyAsync(() -> getPriceByStoreIdAndSku(storeId, sku), executor);

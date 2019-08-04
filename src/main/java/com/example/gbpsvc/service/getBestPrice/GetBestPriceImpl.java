@@ -5,7 +5,6 @@ import com.example.gbpsvc.adapter.store.StoreAdapter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -33,10 +32,7 @@ public class GetBestPriceImpl implements GetBestPrice {
                 .map(CompletableFuture::join)
                 .collect(Collectors.toList());
 
-        // Sort all collected prices descending by price, logging all of them and picking the last one, with the minimum price.
-        return prices.stream()
-                .sorted(Comparator.comparing(SkuPrice::getPrice).reversed()) // SORT BY PRICE DESCENDING
-                .peek(skuPrice -> log.info("Sorted SkuPrice: " + skuPrice.toString()))
-                .reduce((one, two) -> two);
+        // Stream collected prices selecting lower price at each step.
+        return prices.stream().reduce((one, two) -> one.getPrice().compareTo(two.getPrice()) < 0 ? one : two);
     }
 }
