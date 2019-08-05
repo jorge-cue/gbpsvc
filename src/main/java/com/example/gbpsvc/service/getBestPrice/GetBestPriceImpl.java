@@ -33,6 +33,10 @@ public class GetBestPriceImpl implements GetBestPrice {
                 .collect(Collectors.toList());
 
         // Stream collected prices selecting lower price at each step.
-        return prices.stream().reduce((one, two) -> one.getPrice().compareTo(two.getPrice()) < 0 ? one : two);
+        return prices.stream().reduce((one, two) -> {
+            if (one.getPrice() != null && two.getPrice() != null)
+                return one.getPrice().compareTo(two.getPrice()) <= 0 ? one : two;
+            return one.getPrice() != null ? one : two;
+        });
     }
 }
