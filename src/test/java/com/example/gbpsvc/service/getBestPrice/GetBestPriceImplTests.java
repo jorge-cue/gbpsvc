@@ -33,7 +33,11 @@ import static org.junit.Assert.assertTrue;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
-public class GetBestPriceImplTest {
+public class GetBestPriceImplTests {
+
+    // Subject Under Test
+    @Autowired
+    private GetBestPrice getBestPrice;
 
     private static final Random RANDOM = new Random();
 
@@ -46,16 +50,12 @@ public class GetBestPriceImplTest {
                     (context, options) -> String.format("%8.2f", RANDOM.nextDouble() * 1_000.00)))
     );
 
-    // Subject Under Test
-    @Autowired
-    private GetBestPrice getBestPrice;
-
     @BeforeClass
     public static void startUp() {
         wireMockRule.stubFor(get(urlPathMatching("/v1/store/\\d+/sku/\\d+/price"))
                 .withHeader(HttpHeaders.ACCEPT, new RegexPattern(MediaType.APPLICATION_JSON_VALUE))
                 .willReturn(ok()
-                        .withLogNormalRandomDelay(500.0, 10.0)
+                        .withLogNormalRandomDelay(500.0, 1.0)
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                         .withBody("{\"price\":{{generate-price}}, \"storeId\":\"{{request.path.[2]}}\", \"sku\":\"{{request.path.[4]}}\"}")));
     }

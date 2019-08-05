@@ -89,8 +89,8 @@ public class StoreAdapterImpl implements StoreAdapter {
                         return SkuPrice.builder()
                                 .storeId(storeId)
                                 .sku(sku)
-                                .error(throwable.getMessage())
                                 .price(BigDecimal.valueOf(Long.MAX_VALUE, 2))
+                                .error(throwable.getMessage()) // Also report the error for this store.
                                 .build();
                     }
                     return skuPrice;
