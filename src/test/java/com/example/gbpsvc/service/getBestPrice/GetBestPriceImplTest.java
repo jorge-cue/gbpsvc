@@ -2,7 +2,6 @@ package com.example.gbpsvc.service.getBestPrice;
 
 import com.example.gbpsvc.adapter.store.SkuPrice;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
-import com.github.tomakehurst.wiremock.http.UniformDistribution;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.github.tomakehurst.wiremock.matching.RegexPattern;
 import lombok.extern.slf4j.Slf4j;
@@ -56,7 +55,7 @@ public class GetBestPriceImplTest {
         wireMockRule.stubFor(get(urlPathMatching("/v1/store/\\d+/sku/\\d+/price"))
                 .withHeader(HttpHeaders.ACCEPT, new RegexPattern(MediaType.APPLICATION_JSON_VALUE))
                 .willReturn(ok()
-                        .withRandomDelay(new UniformDistribution(250, 1000))
+                        .withLogNormalRandomDelay(500.0, 10.0)
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                         .withBody("{\"price\":{{generate-price}}, \"storeId\":\"{{request.path.[2]}}\", \"sku\":\"{{request.path.[4]}}\"}")));
     }

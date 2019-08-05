@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
@@ -50,7 +51,12 @@ public class StoreAdapterImpl implements StoreAdapter {
 
         final RequestEntity<Void> requestEntity = new RequestEntity<>(headers, GET, uri);
 
-        ResponseEntity<SkuPrice> response = restTemplate.exchange(uri, GET, requestEntity, SkuPrice.class);
+        ResponseEntity<SkuPrice> response;
+        try {
+            response = restTemplate.exchange(uri, GET, requestEntity, SkuPrice.class);
+        } catch (Exception ex) {
+            throw new StoreAdapterException(ex.getMessage(), ex);
+        }
 
         if (response.getStatusCode().is2xxSuccessful() && response.hasBody()) {
             final SkuPrice skuPrice = response.getBody();
@@ -69,10 +75,25 @@ public class StoreAdapterImpl implements StoreAdapter {
     }
 
     /*
-     * The synchronous call above is launched in another thread so this threar may continue non blocked.
+     * The synchronous call above is launched in another thread so this thread may continue non blocked.
      * CompletableFuture can be used to retrieve the response.
+     * Adds an error handler, reporting the error to log and returning an artificially HIGH price to rule out this store.
      */
     public CompletableFuture<SkuPrice> getAsyncPriceByStoreIdAndSku(String storeId, String sku) {
-        return CompletableFuture.supplyAsync(() -> getPriceByStoreIdAndSku(storeId, sku), executor);
+        return CompletableFuture.supplyAsync(() -> getPriceByStoreIdAndSku(storeId, sku), executor)
+                .handle(((skuPrice, throwable) -> {
+                    // Handle Exceptions, reporting them to log and returning a SkuPrice with an exceptionally high price
+                    // to rule out this store.
+                    if (throwable != null) {
+                        log.error(throwable.getMessage(), throwable);
+                        return SkuPrice.builder()
+                                .storeId(storeId)
+                                .sku(sku)
+                                .error(throwable.getMessage())
+                                .price(BigDecimal.valueOf(Long.MAX_VALUE, 2))
+                                .build();
+                    }
+                    return skuPrice;
+                }));
     }
 }

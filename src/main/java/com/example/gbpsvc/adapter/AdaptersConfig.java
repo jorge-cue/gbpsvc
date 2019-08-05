@@ -15,8 +15,7 @@ public class AdaptersConfig {
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplateBuilder()
-                .setConnectTimeout(Duration.ofMillis(10L))
-                .setReadTimeout(Duration.ofSeconds(2L))
+                .setReadTimeout(Duration.ofMillis(700L))
                 .build();
     }
 
