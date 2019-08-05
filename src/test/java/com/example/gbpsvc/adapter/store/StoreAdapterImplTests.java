@@ -55,6 +55,9 @@ public class StoreAdapterImplTests {
                 .willReturn(ok()
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                         .withBody("{\"price\":{{generate-price}}, \"storeId\":\"{{request.path.[2]}}\", \"sku\":\"{{request.path.[4]}}\"}")));
+        wireMockRule.stubFor(get(urlPathMatching("/v1/store/2000/sku/\\d+/price"))
+                .withHeader(HttpHeaders.ACCEPT, new RegexPattern(MediaType.APPLICATION_JSON_VALUE))
+                .willReturn(notFound()));
         wireMockRule.stubFor(get(urlPathMatching("/v1/store/5000/sku/\\d+/price"))
                 .withHeader(HttpHeaders.ACCEPT, new RegexPattern(MediaType.APPLICATION_JSON_VALUE))
                 .willReturn(ok()
@@ -70,6 +73,11 @@ public class StoreAdapterImplTests {
     }
 
     @Test(expected = StoreAdapterException.class)
+    public void getPriceByStoreIdAndSku_NotFound() {
+        storeAdapter.getPriceByStoreIdAndSku("2000", "1234567890");
+    }
+
+    @Test(expected = StoreAdapterException.class)
     public void getPriceByStoreIdAndSku_Timeout() {
         storeAdapter.getPriceByStoreIdAndSku("5000", "1234567890");
     }
@@ -79,9 +87,10 @@ public class StoreAdapterImplTests {
         CompletableFuture<SkuPrice> future = storeAdapter.getAsyncPriceByStoreIdAndSku("0001", "1234567890");
         SkuPrice skuPrice = future.join();
         assertThat(skuPrice).isNotNull();
-        assertThat(skuPrice.getPrice()).isGreaterThanOrEqualTo(BigDecimal.ZERO).isLessThanOrEqualTo(BigDecimal.valueOf(1_000.0));
+        assertThat(skuPrice.getPrice()).isNotNull().isGreaterThanOrEqualTo(BigDecimal.ZERO).isLessThanOrEqualTo(BigDecimal.valueOf(1_000.0));
         assertThat(skuPrice.getStoreId()).isEqualTo("0001");
         assertThat(skuPrice.getSku()).isEqualTo("1234567890");
+        assertThat(skuPrice.getError()).isNull();
     }
 
     @Test
@@ -89,8 +98,9 @@ public class StoreAdapterImplTests {
         CompletableFuture<SkuPrice> future = storeAdapter.getAsyncPriceByStoreIdAndSku("5000", "1234567890");
         SkuPrice skuPrice = future.join();
         assertThat(skuPrice).isNotNull();
-        assertThat(skuPrice.getPrice()).isGreaterThanOrEqualTo(BigDecimal.valueOf(Long.MAX_VALUE, 2));
+        assertThat(skuPrice.getPrice()).isNull();
         assertThat(skuPrice.getStoreId()).isEqualTo("5000");
         assertThat(skuPrice.getSku()).isEqualTo("1234567890");
+        assertThat(skuPrice.getError()).isNotNull();
     }
 }

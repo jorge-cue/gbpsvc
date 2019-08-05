@@ -7,10 +7,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
@@ -54,7 +55,8 @@ public class StoreAdapterImpl implements StoreAdapter {
         ResponseEntity<SkuPrice> response;
         try {
             response = restTemplate.exchange(uri, GET, requestEntity, SkuPrice.class);
-        } catch (Exception ex) {
+        } catch (HttpClientErrorException | ResourceAccessException ex) {
+            log.error(ex.getMessage(), ex);
             throw new StoreAdapterException(ex.getMessage(), ex);
         }
 
@@ -81,19 +83,19 @@ public class StoreAdapterImpl implements StoreAdapter {
      */
     public CompletableFuture<SkuPrice> getAsyncPriceByStoreIdAndSku(String storeId, String sku) {
         return CompletableFuture.supplyAsync(() -> getPriceByStoreIdAndSku(storeId, sku), executor)
-                .handle(((skuPrice, throwable) -> {
-                    // Handle Exceptions, reporting them to log and returning a SkuPrice with an exceptionally high price
+                .handle((skuPrice, throwable) -> {
+                    // Handle Exceptions, reporting them to log and returning a Mock SkuPrice with an exceptionally high price
                     // to rule out this store.
                     if (throwable != null) {
                         log.error(throwable.getMessage(), throwable);
                         return SkuPrice.builder()
                                 .storeId(storeId)
                                 .sku(sku)
-                                .price(BigDecimal.valueOf(Long.MAX_VALUE, 2))
-                                .error(throwable.getMessage()) // Also report the error for this store.
+                                .price(null) // No price available
+                                .error(throwable.getMessage()) // Report the error instead.
                                 .build();
                     }
                     return skuPrice;
-                }));
+                });
     }
 }
