@@ -56,7 +56,7 @@ public class StoreAdapterImpl implements StoreAdapter {
         try {
             response = restTemplate.exchange(uri, GET, requestEntity, SkuPrice.class);
         } catch (HttpClientErrorException | ResourceAccessException ex) {
-            log.error(ex.getMessage(), ex);
+            log.error(ex.getMessage());
             throw new StoreAdapterException(ex.getMessage(), ex);
         }
 
@@ -85,7 +85,7 @@ public class StoreAdapterImpl implements StoreAdapter {
         return CompletableFuture.supplyAsync(() -> getPriceByStoreIdAndSku(storeId, sku), executor)
                 .handle((skuPrice, throwable) -> {
                     if (throwable != null) { // Error?
-                        log.error(throwable.getMessage(), throwable); // Report error
+                        log.error(throwable.getMessage()); // Report error
                         return SkuPrice.builder() // Return special SkuPrice without price and with error message.
                                 .storeId(storeId)
                                 .sku(sku)

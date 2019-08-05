@@ -5,10 +5,10 @@ import com.example.gbpsvc.adapter.store.StoreAdapter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Slf4j
@@ -23,20 +23,17 @@ public class GetBestPriceImpl implements GetBestPrice {
 
     public Optional<SkuPrice> getBestPrice(String sku, Iterable<String> stores) {
         // Launch Asynchronous requests to stores, collect al CompletableFutures to claim responses after.
-        List<CompletableFuture<SkuPrice>> futures = StreamSupport.stream(stores.spliterator(), false)
+        @SuppressWarnings("unchecked")
+        CompletableFuture<SkuPrice>[] futures = StreamSupport.stream(stores.spliterator(), true)
                 .map(storeId -> storeAdapter.getAsyncPriceByStoreIdAndSku(storeId, sku))
-                .collect(Collectors.toList());
+                .toArray(size -> new CompletableFuture[size]);
 
-        // Collect request responses.
-        List<SkuPrice> prices = futures.parallelStream()
+        CompletableFuture.allOf(futures).join(); // Wait for all futures to complete
+
+        // Find smallest price.
+        return Arrays.stream(futures)
                 .map(CompletableFuture::join)
-                .collect(Collectors.toList());
-
-        // Stream collected prices selecting lower price at each step.
-        return prices.stream().reduce((one, two) -> {
-            if (one.getPrice() != null && two.getPrice() != null)
-                return one.getPrice().compareTo(two.getPrice()) <= 0 ? one : two;
-            return one.getPrice() != null ? one : two;
-        });
+                .filter(p -> p.getError() == null)
+                .min(Comparator.comparing(SkuPrice::getPrice));
     }
 }

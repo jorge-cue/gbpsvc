@@ -60,7 +60,7 @@ public class GetBestPriceImplTests {
                         .withBody("{\"price\":{{generate-price}}, \"storeId\":\"{{request.path.[2]}}\", \"sku\":\"{{request.path.[4]}}\"}")));
     }
 
-    @Test(timeout = 15_000L)
+    @Test(timeout = 20_000L)
     public void getBestPrice() {
         List<String> stores = IntStream.rangeClosed(1, 100).mapToObj(i -> String.format("%04d", i)).collect(Collectors.toList());
 
