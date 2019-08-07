@@ -78,13 +78,14 @@ public class StoreAdapterImpl implements StoreAdapter {
 
     /*
      * The synchronous call above is launched in another thread so this thread may continue non blocked.
-     * CompletableFuture can be used to retrieve the response.
-     * Adds an error handler, reporting the error to log and returning an artificially HIGH price to rule out this store.
+     * CompletableFuture is used to retrieve the response.
+     * Adds an error handler, reporting the error to log and returning an SkuPrice without price and an error message.
      */
     public CompletableFuture<SkuPrice> getAsyncPriceByStoreIdAndSku(String storeId, String sku) {
-        return CompletableFuture.supplyAsync(() -> getPriceByStoreIdAndSku(storeId, sku), executor)
-                .handle((skuPrice, throwable) -> {
-                    if (throwable != null) { // Error?
+        return CompletableFuture
+                .supplyAsync(() -> getPriceByStoreIdAndSku(storeId, sku), executor)
+                .handle((skuPrice, throwable) -> { // This is to handle the completion of the CompltableFuture
+                    if (throwable != null) { // Was it completed with Error?
                         log.error(throwable.getMessage()); // Report error
                         return SkuPrice.builder() // Return special SkuPrice without price and with error message.
                                 .storeId(storeId)
@@ -93,7 +94,7 @@ public class StoreAdapterImpl implements StoreAdapter {
                                 .error(throwable.getMessage()) // Report the error instead.
                                 .build();
                     }
-                    return skuPrice;
+                    return skuPrice; // No error, return skuPrice as received.
                 });
     }
 }
