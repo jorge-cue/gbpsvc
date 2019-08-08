@@ -15,9 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.math.BigDecimal;
 import java.util.Random;
-import java.util.concurrent.CompletableFuture;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
@@ -80,27 +78,5 @@ public class StoreAdapterImplTests {
     @Test(expected = StoreAdapterException.class)
     public void getPriceByStoreIdAndSku_Timeout() {
         storeAdapter.getPriceByStoreIdAndSku("5000", "1234567890");
-    }
-
-    @Test
-    public void getAsyncPriceByStoreIdAndSku_Success() {
-        CompletableFuture<SkuPrice> future = storeAdapter.getAsyncPriceByStoreIdAndSku("0001", "1234567890");
-        SkuPrice skuPrice = future.join();
-        assertThat(skuPrice).isNotNull();
-        assertThat(skuPrice.getPrice()).isNotNull().isGreaterThanOrEqualTo(BigDecimal.ZERO).isLessThanOrEqualTo(BigDecimal.valueOf(1_000.0));
-        assertThat(skuPrice.getStoreId()).isEqualTo("0001");
-        assertThat(skuPrice.getSku()).isEqualTo("1234567890");
-        assertThat(skuPrice.getError()).isNull();
-    }
-
-    @Test
-    public void getAsyncPriceByStoreIdAndSku_Timeout() {
-        CompletableFuture<SkuPrice> future = storeAdapter.getAsyncPriceByStoreIdAndSku("5000", "1234567890");
-        SkuPrice skuPrice = future.join();
-        assertThat(skuPrice).isNotNull();
-        assertThat(skuPrice.getPrice()).isNull();
-        assertThat(skuPrice.getStoreId()).isEqualTo("5000");
-        assertThat(skuPrice.getSku()).isEqualTo("1234567890");
-        assertThat(skuPrice.getError()).isNotNull();
     }
 }

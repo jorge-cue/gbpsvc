@@ -14,7 +14,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.Collections;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 import static org.springframework.http.HttpMethod.GET;
@@ -27,8 +26,6 @@ public class StoreAdapterImpl implements StoreAdapter {
 
     private final StoreAdapterConfig config;
 
-    private final Executor executor;
-
     @Autowired
     public StoreAdapterImpl(
             RestTemplate restTemplate,
@@ -36,7 +33,6 @@ public class StoreAdapterImpl implements StoreAdapter {
             Executor executor) {
         this.restTemplate = restTemplate;
         this.config = config;
-        this.executor = executor;
     }
 
     /*
@@ -74,27 +70,5 @@ public class StoreAdapterImpl implements StoreAdapter {
         log.error(message);
 
         throw new StoreAdapterException(message);
-    }
-
-    /*
-     * The synchronous call above is launched in another thread so this thread may continue non blocked.
-     * CompletableFuture is used to retrieve the response.
-     * Adds an error handler, reporting the error to log and returning an SkuPrice without price and an error message.
-     */
-    public CompletableFuture<SkuPrice> getAsyncPriceByStoreIdAndSku(String storeId, String sku) {
-        return CompletableFuture
-                .supplyAsync(() -> getPriceByStoreIdAndSku(storeId, sku), executor)
-                .handle((skuPrice, throwable) -> { // This is to handle the completion of the CompltableFuture
-                    if (throwable != null) { // Was it completed with Error?
-                        log.error(throwable.getMessage()); // Report error
-                        return SkuPrice.builder() // Return special SkuPrice without price and with error message.
-                                .storeId(storeId)
-                                .sku(sku)
-                                .price(null) // No price available
-                                .error(throwable.getMessage()) // Report the error instead.
-                                .build();
-                    }
-                    return skuPrice; // No error, return skuPrice as received.
-                });
     }
 }

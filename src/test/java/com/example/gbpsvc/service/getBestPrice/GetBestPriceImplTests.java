@@ -43,6 +43,8 @@ public class GetBestPriceImplTests {
 
     @ClassRule
     public static WireMockClassRule wireMockRule = new WireMockClassRule(options()
+            .asynchronousResponseEnabled(true)
+            .disableRequestJournal()
             .port(8085)
             .extensions(new ResponseTemplateTransformer(
                     true,
