@@ -1,5 +1,7 @@
 package com.example.gbpsvc.adapter.store;
 
+import com.example.gbpsvc.adapter.AdapterException;
+import com.example.gbpsvc.adapter.dto.StoreSkuPriceDTO;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.github.tomakehurst.wiremock.matching.RegexPattern;
@@ -66,16 +68,16 @@ public class StoreAdapterImplTests {
 
     @Test
     public void getPriceByStoreIdAndSku_Success() {
-        SkuPrice skuPrice = storeAdapter.getPriceByStoreIdAndSku("0001", "1234567890");
-        assertThat(skuPrice).isNotNull();
+        StoreSkuPriceDTO storeSkuPriceDTO = storeAdapter.getPriceByStoreIdAndSku("0001", "1234567890");
+        assertThat(storeSkuPriceDTO).isNotNull();
     }
 
-    @Test(expected = StoreAdapterException.class)
+    @Test(expected = AdapterException.class)
     public void getPriceByStoreIdAndSku_NotFound() {
         storeAdapter.getPriceByStoreIdAndSku("2000", "1234567890");
     }
 
-    @Test(expected = StoreAdapterException.class)
+    @Test(expected = AdapterException.class)
     public void getPriceByStoreIdAndSku_Timeout() {
         storeAdapter.getPriceByStoreIdAndSku("5000", "1234567890");
     }

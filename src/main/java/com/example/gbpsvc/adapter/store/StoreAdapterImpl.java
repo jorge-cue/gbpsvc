@@ -1,5 +1,7 @@
 package com.example.gbpsvc.adapter.store;
 
+import com.example.gbpsvc.adapter.AdapterException;
+import com.example.gbpsvc.adapter.dto.StoreSkuPriceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -14,7 +16,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.Collections;
-import java.util.concurrent.Executor;
 
 import static org.springframework.http.HttpMethod.GET;
 
@@ -27,10 +28,7 @@ public class StoreAdapterImpl implements StoreAdapter {
     private final StoreAdapterConfig config;
 
     @Autowired
-    public StoreAdapterImpl(
-            RestTemplate restTemplate,
-            StoreAdapterConfig config,
-            Executor executor) {
+    public StoreAdapterImpl(RestTemplate restTemplate, StoreAdapterConfig config) {
         this.restTemplate = restTemplate;
         this.config = config;
     }
@@ -38,7 +36,7 @@ public class StoreAdapterImpl implements StoreAdapter {
     /*
      * This is a synchronous REST call to get a store/sku price.
      */
-    public SkuPrice getPriceByStoreIdAndSku(String storeId, String sku) {
+    public StoreSkuPriceDTO getPriceByStoreIdAndSku(String storeId, String sku) {
         final URI uri = UriComponentsBuilder.fromUriString(config.getEntryPoint())
                 .pathSegment("v1", "store", "{store-id}", "sku", "{sku}", "price")
                 .build(storeId, sku);
@@ -48,19 +46,19 @@ public class StoreAdapterImpl implements StoreAdapter {
 
         final RequestEntity<Void> requestEntity = new RequestEntity<>(headers, GET, uri);
 
-        ResponseEntity<SkuPrice> response;
+        ResponseEntity<StoreSkuPriceDTO> response;
         try {
-            response = restTemplate.exchange(uri, GET, requestEntity, SkuPrice.class);
+            response = restTemplate.exchange(uri, GET, requestEntity, StoreSkuPriceDTO.class);
         } catch (HttpClientErrorException | ResourceAccessException ex) {
             log.error(ex.getMessage());
-            throw new StoreAdapterException(ex.getMessage(), ex);
+            throw new AdapterException(ex.getMessage(), ex);
         }
 
         if (response.getStatusCode().is2xxSuccessful() && response.hasBody()) {
-            final SkuPrice skuPrice = response.getBody();
-            if (skuPrice != null) {
-                log.info("Received SkuPrice: " + skuPrice.toString());
-                return skuPrice;
+            final StoreSkuPriceDTO storeSkuPriceDTO = response.getBody();
+            if (storeSkuPriceDTO != null) {
+                log.info("Received SkuPrice: " + storeSkuPriceDTO.toString());
+                return storeSkuPriceDTO;
             }
         }
 
@@ -69,6 +67,6 @@ public class StoreAdapterImpl implements StoreAdapter {
 
         log.error(message);
 
-        throw new StoreAdapterException(message);
+        throw new AdapterException(message);
     }
 }

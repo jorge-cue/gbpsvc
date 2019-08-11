@@ -1,6 +1,6 @@
 package com.example.gbpsvc.service.getBestPrice;
 
-import com.example.gbpsvc.adapter.store.SkuPrice;
+import com.example.gbpsvc.adapter.dto.StoreSkuPriceDTO;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.github.tomakehurst.wiremock.matching.RegexPattern;
@@ -58,7 +58,6 @@ public class GetBestPriceImplTests {
                 .withHeader(HttpHeaders.ACCEPT, new RegexPattern(MediaType.APPLICATION_JSON_VALUE))
                 .willReturn(ok()
                         .withLogNormalRandomDelay(500.0, 1.0)
-                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                         .withBody("{\"price\":{{generate-price}}, \"storeId\":\"{{request.path.[2]}}\", \"sku\":\"{{request.path.[4]}}\"}")));
     }
 
@@ -66,13 +65,13 @@ public class GetBestPriceImplTests {
     public void getBestPrice() {
         List<String> stores = IntStream.rangeClosed(1, 100).mapToObj(i -> String.format("%04d", i)).collect(Collectors.toList());
 
-        Optional<SkuPrice> response = getBestPrice.getBestPrice("750123456789", stores);
+        Optional<StoreSkuPriceDTO> response = getBestPrice.getBestPrice("750123456789", stores);
 
         assertTrue(response.isPresent());
-        SkuPrice skuPrice = response.get();
-        log.info("Minimum SkuPrice: " + skuPrice.toString());
-        assertThat(skuPrice.getStoreId()).isNotEmpty();
-        assertThat(skuPrice.getSku()).isEqualTo("750123456789");
-        assertThat(skuPrice.getPrice()).isNotNull();
+        StoreSkuPriceDTO storeSkuPriceDTO = response.get();
+        log.info("Minimum SkuPrice: " + storeSkuPriceDTO.toString());
+        assertThat(storeSkuPriceDTO.getStoreId()).isNotEmpty();
+        assertThat(storeSkuPriceDTO.getSku()).isEqualTo("750123456789");
+        assertThat(storeSkuPriceDTO.getPrice()).isNotNull();
     }
 }

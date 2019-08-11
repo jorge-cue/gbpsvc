@@ -1,6 +1,6 @@
 package com.example.gbpsvc.service.getBestPrice;
 
-import com.example.gbpsvc.adapter.store.SkuPrice;
+import com.example.gbpsvc.adapter.dto.StoreSkuPriceDTO;
 import com.example.gbpsvc.adapter.store.StoreAdapter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,10 +27,10 @@ public class GetBestPriceImpl implements GetBestPrice {
         this.executor = executor;
     }
 
-    public Optional<SkuPrice> getBestPrice(String sku, Iterable<String> stores) {
+    public Optional<StoreSkuPriceDTO> getBestPrice(String sku, Iterable<String> stores) {
         // Launch Asynchronous requests to stores, collect al CompletableFutures to claim responses after.
         @SuppressWarnings("unchecked")
-        CompletableFuture<SkuPrice>[] futures = StreamSupport.stream(stores.spliterator(), true)
+        CompletableFuture<StoreSkuPriceDTO>[] futures = StreamSupport.stream(stores.spliterator(), true)
                 .map(storeId -> CompletableFuture.supplyAsync(() -> storeAdapter.getPriceByStoreIdAndSku(storeId, sku), executor)
                         /*
                          * Handles completion of CompletableFuture, when completed skuPrice has a value an throwable is null
@@ -40,7 +40,7 @@ public class GetBestPriceImpl implements GetBestPrice {
                         .handle((skuPrice, throwable) -> {
                                     if (throwable != null) {
                                         log.error(throwable.getMessage(), throwable);
-                                        return SkuPrice.builder().storeId(storeId).sku(sku).error(throwable.getMessage()).build();
+                                        return StoreSkuPriceDTO.builder().storeId(storeId).sku(sku).error(throwable.getMessage()).build();
                                     }
                                     return skuPrice;
                                 }
@@ -49,7 +49,7 @@ public class GetBestPriceImpl implements GetBestPrice {
         // Wait for all futures to complete
         CompletableFuture.allOf(futures).join();
         // Find smallest price.
-        List<SkuPrice> results = Arrays.stream(futures).map(CompletableFuture::join).collect(Collectors.toList());
+        List<StoreSkuPriceDTO> results = Arrays.stream(futures).map(CompletableFuture::join).collect(Collectors.toList());
 
         log.info("Number of successfully received prices: " + results.stream().filter(s -> s.getError() == null).count());
         log.info("Number of error on received prices: " + results.stream().filter(s -> s.getError() != null).count());
@@ -57,6 +57,6 @@ public class GetBestPriceImpl implements GetBestPrice {
         return Arrays.stream(futures).parallel()
                 .map(CompletableFuture::join)
                 .filter(p -> p.getError() == null)
-                .min(Comparator.comparing(SkuPrice::getPrice));
+                .min(Comparator.comparing(StoreSkuPriceDTO::getPrice));
     }
 }
