@@ -49,7 +49,10 @@ public class GetBestPriceImpl implements GetBestPrice {
         // Wait for all futures to complete
         CompletableFuture.allOf(futures).join();
         // Find smallest price.
-        List<StoreSkuPriceDTO> results = Arrays.stream(futures).map(CompletableFuture::join).collect(Collectors.toList());
+        List<StoreSkuPriceDTO> results = Arrays.stream(futures).map(CompletableFuture::join)
+                .sorted(Comparator.comparing(StoreSkuPriceDTO::getStoreId))
+                .peek(storeSkuPriceDTO -> log.info("Received Store/Sku: " + storeSkuPriceDTO.toString()))
+                .collect(Collectors.toList());
 
         log.info("Number of successfully received prices: " + results.stream().filter(s -> s.getError() == null).count());
         log.info("Number of error on received prices: " + results.stream().filter(s -> s.getError() != null).count());

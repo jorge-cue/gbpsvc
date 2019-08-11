@@ -2,6 +2,7 @@ package com.example.gbpsvc.adapter.store;
 
 import com.example.gbpsvc.adapter.AdapterException;
 import com.example.gbpsvc.adapter.dto.StoreSkuPriceDTO;
+import io.micrometer.core.annotation.Timed;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -36,6 +37,7 @@ public class StoreAdapterImpl implements StoreAdapter {
     /*
      * This is a synchronous REST call to get a store/sku price.
      */
+    @Timed(value = "get.price", longTask = true, histogram = true)
     public StoreSkuPriceDTO getPriceByStoreIdAndSku(String storeId, String sku) {
         final URI uri = UriComponentsBuilder.fromUriString(config.getEntryPoint())
                 .pathSegment("v1", "store", "{store-id}", "sku", "{sku}", "price")

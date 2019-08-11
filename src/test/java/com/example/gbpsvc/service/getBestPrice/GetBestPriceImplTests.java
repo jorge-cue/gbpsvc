@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.github.tomakehurst.wiremock.matching.RegexPattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHeaders;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -57,8 +58,14 @@ public class GetBestPriceImplTests {
         wireMockRule.stubFor(get(urlPathMatching("/v1/store/\\d+/sku/\\d+/price"))
                 .withHeader(HttpHeaders.ACCEPT, new RegexPattern(MediaType.APPLICATION_JSON_VALUE))
                 .willReturn(ok()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                         .withLogNormalRandomDelay(500.0, 1.0)
-                        .withBody("{\"price\":{{generate-price}}, \"storeId\":\"{{request.path.[2]}}\", \"sku\":\"{{request.path.[4]}}\"}")));
+                        .withBody("{\"storeId\":\"{{request.path.[2]}}\", \"sku\":\"{{request.path.[4]}}\", \"price\":{{generate-price}} }")));
+    }
+
+    @AfterClass
+    public static void shutDown() {
+
     }
 
     @Test(timeout = 20_000L)
