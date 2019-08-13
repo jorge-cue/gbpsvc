@@ -17,7 +17,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
@@ -35,6 +38,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class StoreAdapterImplTests {
 
     private static final Random RANDOM = new Random();
+    public static final String SKU = "1234567890";
+
     @ClassRule
     public static WireMockClassRule wireMockRule = new WireMockClassRule(options()
             .port(8085)
@@ -50,7 +55,13 @@ public class StoreAdapterImplTests {
     public static void startUp() throws Exception {
         wireMockRule.stubFor(any(anyUrl())
                 .willReturn(notFound()));
-        wireMockRule.stubFor(get(urlPathMatching("/v1/store/0001/sku/\\d+/price"))
+        wireMockRule.stubFor(get(urlPathMatching("/v1/store/\\d+/sku/\\d+/price"))
+                .withHeader(HttpHeaders.ACCEPT, new RegexPattern(MediaType.APPLICATION_JSON_VALUE))
+                .willReturn(ok()
+                        .withLogNormalRandomDelay(500.0, 1.0)
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                        .withBody("{\"price\":{{generate-price}}, \"storeId\":\"{{request.path.[2]}}\", \"sku\":\"{{request.path.[4]}}\"}")));
+        wireMockRule.stubFor(get(urlPathMatching("/v1/store/1000/sku/\\d+/price"))
                 .withHeader(HttpHeaders.ACCEPT, new RegexPattern(MediaType.APPLICATION_JSON_VALUE))
                 .willReturn(ok()
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -58,7 +69,7 @@ public class StoreAdapterImplTests {
         wireMockRule.stubFor(get(urlPathMatching("/v1/store/2000/sku/\\d+/price"))
                 .withHeader(HttpHeaders.ACCEPT, new RegexPattern(MediaType.APPLICATION_JSON_VALUE))
                 .willReturn(notFound()));
-        wireMockRule.stubFor(get(urlPathMatching("/v1/store/5000/sku/\\d+/price"))
+        wireMockRule.stubFor(get(urlPathMatching("/v1/store/3000/sku/\\d+/price"))
                 .withHeader(HttpHeaders.ACCEPT, new RegexPattern(MediaType.APPLICATION_JSON_VALUE))
                 .willReturn(ok()
                         .withFixedDelay(1_000) // To cause RestTemplate timeout
@@ -68,17 +79,30 @@ public class StoreAdapterImplTests {
 
     @Test
     public void getPriceByStoreIdAndSku_Success() {
-        StoreSkuPriceDTO storeSkuPriceDTO = storeAdapter.getPriceByStoreIdAndSku("0001", "1234567890");
+        StoreSkuPriceDTO storeSkuPriceDTO = storeAdapter.getPriceByStoreIdAndSku("1000", SKU);
         assertThat(storeSkuPriceDTO).isNotNull();
     }
 
     @Test(expected = AdapterException.class)
     public void getPriceByStoreIdAndSku_NotFound() {
-        storeAdapter.getPriceByStoreIdAndSku("2000", "1234567890");
+        storeAdapter.getPriceByStoreIdAndSku("2000", SKU);
     }
 
     @Test(expected = AdapterException.class)
     public void getPriceByStoreIdAndSku_Timeout() {
-        storeAdapter.getPriceByStoreIdAndSku("5000", "1234567890");
+        storeAdapter.getPriceByStoreIdAndSku("3000", SKU);
+    }
+
+    @Test(timeout = 15_000L)
+    public void getPriceByStoreIdAndSku_100Stores() {
+        List<String> stores = IntStream.rangeClosed(1, 100).mapToObj(i -> String.format("%04d", i)).collect(Collectors.toList());
+        List<StoreSkuPriceDTO> storeSkuPriceDTOList = stores.stream().map(storeId -> {
+            try {
+                return storeAdapter.getPriceByStoreIdAndSku(storeId, SKU);
+            } catch (Exception e) {
+                return StoreSkuPriceDTO.builder().storeId(storeId).sku(SKU).error(e.getMessage()).build();
+            }
+        })
+                .collect(Collectors.toList());
     }
 }
