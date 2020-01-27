@@ -8,6 +8,7 @@ import org.springframework.web.client.RestTemplate;
 import java.time.Duration;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 @Configuration
 public class AdaptersConfig {
@@ -22,6 +23,10 @@ public class AdaptersConfig {
 
     @Bean
     public Executor executor() {
-        return Executors.newCachedThreadPool();
+        return Executors.newCachedThreadPool(r -> {
+            Thread t = new Thread(r);
+            t.setDaemon(true);
+            return t;
+        });
     }
 }

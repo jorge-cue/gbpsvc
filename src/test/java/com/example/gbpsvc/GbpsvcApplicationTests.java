@@ -12,5 +12,4 @@ public class GbpsvcApplicationTests {
     @Test
     public void contextLoads() {
     }
-
 }

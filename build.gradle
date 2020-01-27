@@ -36,8 +36,8 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
-    testCompile 'junit:junit:4.12'
-    testCompile "com.github.tomakehurst:wiremock-jre8:2.23.2"
+    testImplementation 'junit:junit:4.12'
+    testImplementation "com.github.tomakehurst:wiremock-jre8:2.23.2"
 
     testCompileOnly 'org.projectlombok:lombok'
 

@@ -72,7 +72,7 @@ public class StoreAdapterImplTests {
         wireMockRule.stubFor(get(urlPathMatching("/v1/store/3000/sku/\\d+/price"))
                 .withHeader(HttpHeaders.ACCEPT, new RegexPattern(MediaType.APPLICATION_JSON_VALUE))
                 .willReturn(ok()
-                        .withFixedDelay(1_000) // To cause RestTemplate timeout
+                        .withFixedDelay(5_000) // To cause RestTemplate timeout
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                         .withBody("{\"price\":{{generate-price}}, \"storeId\":\"{{request.path.[2]}}\", \"sku\":\"{{request.path.[4]}}\"}")));
     }
@@ -93,7 +93,7 @@ public class StoreAdapterImplTests {
         storeAdapter.getPriceByStoreIdAndSku("3000", SKU);
     }
 
-    @Test(timeout = 15_000L)
+    @Test
     public void getPriceByStoreIdAndSku_100Stores() {
         List<String> stores = IntStream.rangeClosed(1, 100).mapToObj(i -> String.format("%04d", i)).collect(Collectors.toList());
         List<StoreSkuPriceDTO> storeSkuPriceDTOList = stores.stream().map(storeId -> {
