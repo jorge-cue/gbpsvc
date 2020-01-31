@@ -42,9 +42,4 @@ public class AbstractGetBestPriceImplTest {
                         .withLogNormalRandomDelay(500.0, 1.0)
                         .withBody("{\"storeId\":\"{{request.path.[2]}}\", \"sku\":\"{{request.path.[4]}}\", \"price\":{{generate-price}} }")));
     }
-
-    @AfterClass
-    public static void shutDown() {
-
-    }
 }
