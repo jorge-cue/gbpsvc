@@ -30,6 +30,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.eq;
 
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -52,7 +54,7 @@ public class StoreAdapterImplTests {
     public StoreAdapter storeAdapter;
 
     @BeforeClass
-    public static void startUp() throws Exception {
+    public static void startUp() {
         wireMockRule.stubFor(any(anyUrl())
                 .willReturn(notFound()));
         wireMockRule.stubFor(get(urlPathMatching("/v1/store/\\d+/sku/\\d+/price"))
@@ -94,9 +96,9 @@ public class StoreAdapterImplTests {
     }
 
     @Test
-    public void getPriceByStoreIdAndSku_100Stores() {
-        List<String> stores = IntStream.rangeClosed(1, 100).mapToObj(i -> String.format("%04d", i)).collect(Collectors.toList());
-        List<StoreSkuPriceDTO> storeSkuPriceDTOList = stores.stream().map(storeId -> {
+    public void getPriceByStoreIdAndSku_5Stores() {
+        List<String> stores = IntStream.rangeClosed(1, 5).mapToObj(i -> String.format("%04d", i)).collect(Collectors.toList());
+        List<StoreSkuPriceDTO> storeSkuPriceDTOList = stores.stream().parallel().map(storeId -> {
             try {
                 return storeAdapter.getPriceByStoreIdAndSku(storeId, SKU);
             } catch (Exception e) {
@@ -104,5 +106,6 @@ public class StoreAdapterImplTests {
             }
         })
                 .collect(Collectors.toList());
+        assertEquals(5, storeSkuPriceDTOList.size());
     }
 }

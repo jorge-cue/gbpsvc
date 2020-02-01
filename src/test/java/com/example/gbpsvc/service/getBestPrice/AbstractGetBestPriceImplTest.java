@@ -39,7 +39,7 @@ public class AbstractGetBestPriceImplTest {
                 .withHeader(HttpHeaders.ACCEPT, new RegexPattern(MediaType.APPLICATION_JSON_VALUE))
                 .willReturn(ok()
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                        .withLogNormalRandomDelay(500.0, 1.0)
+                        .withFixedDelay(500)
                         .withBody("{\"storeId\":\"{{request.path.[2]}}\", \"sku\":\"{{request.path.[4]}}\", \"price\":{{generate-price}} }")));
     }
 }

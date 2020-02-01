@@ -19,17 +19,27 @@ public class GetBestPriceImplV2 implements GetBestPrice {
         this.storeAdapter = storeAdapter;
     }
 
+    /**
+     * Gets best price for an SKU from a list of stores.
+     * Ths second version just queries all stores in a parallel stream then computes the minimum price from them if
+     * @param sku
+     * @param stores
+     * @return
+     */
     public Optional<StoreSkuPriceDTO> getBestPrice(String sku, Iterable<String> stores) {
-        return StreamSupport.stream(stores.spliterator(), true).map(storeId -> {
-            try {
-                return storeAdapter.getPriceByStoreIdAndSku(storeId, sku);
-            } catch (Throwable t) {
-                return StoreSkuPriceDTO.builder().storeId(storeId).sku(sku).error(t.getMessage()).build();
-            }
-        })
+        return StreamSupport.stream(stores.spliterator(), true)// <- Parallel stream
+                .map(storeId -> getPriceByStoreIdAndSku(storeId, sku))
                 .peek(storeSkuPriceDTO -> log.info("Received Store/Sku: " + storeSkuPriceDTO.toString()))
                 .filter(p -> p.getError() == null)
                 .min(Comparator.comparing(StoreSkuPriceDTO::getPrice));
+    }
+
+    private StoreSkuPriceDTO getPriceByStoreIdAndSku(String storeId, String sku) {
+        try {
+            return storeAdapter.getPriceByStoreIdAndSku(storeId, sku); // <- Synchronous call
+        } catch (Throwable t) {
+            return StoreSkuPriceDTO.builder().storeId(storeId).sku(sku).error(t.getMessage()).build();
+        }
     }
 }
 

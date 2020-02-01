@@ -27,7 +27,7 @@ public class GetBestPriceImplV3 implements GetBestPrice {
     public Optional<StoreSkuPriceDTO> getBestPrice(String sku, Iterable<String> stores) {
         // Launch Asynchronous requests to stores, collect all CompletableFutures to claim responses after.
         @SuppressWarnings("unchecked")
-        CompletableFuture<StoreSkuPriceDTO>[] futures = StreamSupport.stream(stores.spliterator(), true)
+        CompletableFuture<StoreSkuPriceDTO>[] futures = StreamSupport.stream(stores.spliterator(), false)
                 .map(storeId -> CompletableFuture.supplyAsync(() -> storeAdapter.getPriceByStoreIdAndSku(storeId, sku))
                         /*
                          * Handles completion of CompletableFuture, when completed skuPrice has a value an throwable is null
@@ -36,16 +36,17 @@ public class GetBestPriceImplV3 implements GetBestPrice {
                          */
                         .handle((skuPrice, throwable) -> {
                                     if (throwable != null) {
-                                        log.error(throwable.getMessage(), throwable);
+                                        log.error(throwable.getMessage());
                                         return StoreSkuPriceDTO.builder().storeId(storeId).sku(sku).error(throwable.getMessage()).build();
                                     }
                                     return skuPrice;
                                 }
                         ))
                 .toArray(CompletableFuture[]::new);
-        List<StoreSkuPriceDTO> results = Arrays.stream(futures).map(CompletableFuture::join)
+        List<StoreSkuPriceDTO> results = Arrays.stream(futures).parallel()
+                .map(CompletableFuture::join)
                 .sorted(Comparator.comparing(StoreSkuPriceDTO::getStoreId))
-                .peek(storeSkuPriceDTO -> log.info("Received Store/Sku: " + storeSkuPriceDTO.toString()))
+                .peek(storeSkuPriceDTO -> log.info("Received Store/Sku: {}", storeSkuPriceDTO))
                 .collect(Collectors.toList());
 
         log.info("Number of successfully received prices: " + results.stream().filter(s -> s.getError() == null).count());
